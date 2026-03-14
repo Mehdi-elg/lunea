@@ -635,7 +635,7 @@ html, body {
 
     <div class="api-url-row">
       <span class="api-url-label">API</span>
-      <input class="api-url-input" type="text" id="api-url" value="http://localhost:3000">
+      <input class="api-url-input" type="text" id="api-url" value="https://lunea-backend-production.up.railway.app">
     </div>
   </div>
 </div>
@@ -730,7 +730,7 @@ html, body {
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────
-let API_URL    = localStorage.getItem('lunea_api') || 'http://localhost:3000';
+let API_URL    = localStorage.getItem('lunea_api') || 'https://lunea-backend-production.up.railway.app';
 let JWT_TOKEN  = localStorage.getItem('lunea_token') || '';
 let MERCHANT   = JSON.parse(localStorage.getItem('lunea_merchant') || 'null');
 
@@ -746,6 +746,7 @@ const history = [];
 // ── INIT ────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('api-url').value = API_URL;
+  document.getElementById('api-url').placeholder = 'https://lunea-backend-production.up.railway.app';
 
   // Si token stocké, vérifier et aller direct au scan
   if (JWT_TOKEN && MERCHANT) {
