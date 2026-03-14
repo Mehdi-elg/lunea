@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lunéa — Créez votre carte de fidélité</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --night:       #0a0c14;
+  --deep:        #0d0f1a;
+  --surface:     #131626;
+  --surface2:    #1c2135;
+  --surface3:    #222840;
+  --gold:        #c9a84c;
+  --gold-light:  #e8c97a;
+  --gold-dim:    rgba(201,168,76,0.13);
+  --gold-border: rgba(201,168,76,0.25);
+  --cream:       #f0ebe0;
+  --cream-dim:   rgba(240,235,224,0.6);
+  --cream-muted: rgba(240,235,224,0.32);
+  --green:       #4ade80;
+  --green-dim:   rgba(74,222,128,0.12);
+  --red:         #f87171;
+  --font-d: 'Cormorant Garamond', serif;
+  --font-b: 'DM Sans', sans-serif;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--night);
+  color: var(--cream);
+  font-family: var(--font-b);
+  font-weight: 300;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 0.5px solid rgba(240,235,224,0.06);
+  position: sticky; top: 0;
+  background: rgba(10,12,20,0.92);
+  backdrop-filter: blur(12px);
+  z-index: 50;
+}
+.nav-logo {
+  font-family: var(--font-d);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--gold-light);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+.nav-login {
+  font-size: 13px;
+  color: var(--cream-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.nav-login:hover { color: var(--cream); }
+
+/* ── PROGRESS BAR ── */
+.progress-wrap {
+  padding: 28px 40px 0;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.progress-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 8px;
+}
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  position: relative;
+}
+.progress-step:not(:last-child)::after {
+  content: '';
+  flex: 1;
+  height: 0.5px;
+  background: rgba(240,235,224,0.1);
+  margin: 0 8px;
+  transition: background 0.4s;
+}
+.progress-step.done:not(:last-child)::after {
+  background: var(--gold);
+}
+.step-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(240,235,224,0.15);
+  background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--cream-muted);
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+.progress-step.active .step-dot {
+  background: var(--gold-dim);
+  border-color: var(--gold-border);
+  color: var(--gold-light);
+}
+.progress-step.done .step-dot {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--night);
+  font-size: 13px;
+}
+.step-label {
+  font-size: 11px;
+  color: var(--cream-muted);
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+.progress-step.active .step-label { color: var(--gold); }
+.progress-step.done .step-label   { color: var(--cream-dim); }
+
+/* ── LAYOUT PRINCIPAL ── */
+.onboarding-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 40px;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 40px 40px 80px;
+  align-items: start;
+}
+
+/* ── ÉTAPES ── */
+.step { display: none; }
+.step.active { display: block; }
+
+.step-header { margin-bottom: 32px; }
+.step-tag {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+  display: block;
+}
+.step-title {
+  font-family: var(--font-d);
+  font-size: clamp(32px, 4vw, 44px);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--cream);
+  margin-bottom: 10px;
+}
+.step-title em { font-style: italic; color: var(--gold-light); }
+.step-desc {
+  font-size: 14px;
+  color: var(--cream-muted);
+  line-height: 1.7;
+  max-width: 420px;
+}
+
+/* ── FORM ── */
+.form-group { margin-bottom: 18px; }
+.form-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cream-muted);
+  margin-bottom: 7px;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 0.5px solid rgba(240,235,224,0.1);
+  border-radius: var(--radius-sm);
+  padding: 13px 16px;
+  font-family: var(--font-b);
+  font-size: 14px;
+  color: var(--cream);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--cream-muted); }
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--gold-border);
+  background: var(--surface2);
+}
+.form-select { cursor: pointer; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ── COULEURS ── */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+.color-swatch {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.15s, border-color 0.15s;
+  position: relative;
+}
+.color-swatch:hover { transform: scale(1.08); }
+.color-swatch.selected {
+  border-color: var(--gold);
+  transform: scale(1.08);
+}
+.color-swatch.selected::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  color: #fff;
+  font-weight: 500;
+}
+
+/* ── EMOJI PICKER ── */
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+.emoji-btn {
+  aspect-ratio: 1;
+  background: var(--surface);
+  border: 0.5px solid rgba(240,235,224,0.08);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.emoji-btn:hover { background: var(--surface2); transform: scale(1.1); }
+.emoji-btn.selected {
+  background: var(--gold-dim);
+  border-color: var(--gold-border);
+  transform: scale(1.1);
+}
+
+/* ── STAMPS SLIDER ── */
+.stamps-control {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border: 0.5px solid rgba(240,235,224,0.1);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+}
+.stamps-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 0.5px solid rgba(240,235,224,0.1);
+  color: var(--cream);
+  font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.stamps-btn:hover { background: var(--gold-dim); border-color: var(--gold-border); color: var(--gold-light); }
+.stamps-value {
+  font-family: var(--font-d);
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--gold-light);
+  flex: 1;
+  text-align: center;
+}
+.stamps-label { font-size: 12px; color: var(--cream-muted); flex: 1; }
+
+/* ── BOUTONS ── */
+.btn-next {
+  width: 100%;
+  background: var(--gold);
+  border: none;
+  border-radius: 50px;
+  padding: 15px;
+  font-family: var(--font-b);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--night);
+  cursor: pointer;
+  margin-top: 24px;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-next:hover { background: var(--gold-light); }
+.btn-next:active { transform: scale(0.98); }
+.btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-back {
+  background: transparent;
+  border: 0.5px solid rgba(240,235,224,0.12);
+  border-radius: 50px;
+  padding: 13px;
+  font-family: var(--font-b);
+  font-size: 14px;
+  color: var(--cream-muted);
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+  transition: all 0.15s;
+}
+.btn-back:hover { border-color: rgba(240,235,224,0.25); color: var(--cream); }
+
+.form-error {
+  background: rgba(248,113,113,0.1);
+  border: 0.5px solid rgba(248,113,113,0.25);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-size: 13px;
+  color: var(--red);
+  margin-top: 14px;
+  display: none;
+}
+.form-error.show { display: block; }
+
+/* ── PREVIEW COLONNE ── */
+.preview-col {
+  position: sticky;
+  top: 100px;
+}
+.preview-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cream-muted);
+  margin-bottom: 14px;
+  display: block;
+}
+
+/* Mockup téléphone */
+.phone-shell {
+  width: 220px;
+  margin: 0 auto;
+  background: #141828;
+  border-radius: 32px;
+  border: 1px solid rgba(255,255,255,0.07);
+  overflow: hidden;
+  box-shadow: 0 32px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,168,76,0.05);
+}
+.phone-notch {
+  background: #0a0c14;
+  height: 28px;
+  display: flex; align-items: center; justify-content: center;
+}
+.phone-notch-pill {
+  width: 70px; height: 16px;
+  background: #000;
+  border-radius: 20px;
+}
+.phone-wallet-bar {
+  background: #0c0e18;
+  padding: 9px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 0.5px solid rgba(255,255,255,0.05);
+}
+.phone-wallet-bar span { font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 500; }
+.wallet-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); }
+
+/* Carte vivante */
+.live-card {
+  margin: 10px;
+  border-radius: 14px;
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+  min-height: 140px;
+  transition: background 0.4s;
+}
+.live-card-shine {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.025) 50%, transparent 60%);
+  animation: cardShine 4s ease-in-out infinite;
+}
+@keyframes cardShine {
+  0%, 100% { transform: translateX(-20%) translateY(-20%); }
+  50%       { transform: translateX(10%) translateY(10%); }
+}
+.live-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.live-card-emoji {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.live-card-name {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+  transition: all 0.2s;
+}
+.live-card-title {
+  font-family: var(--font-d);
+  font-size: 17px;
+  font-weight: 400;
+  color: #fff;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+}
+.live-dots {
+  display: flex; gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.live-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: all 0.2s;
+}
+.live-dot.on { background: rgba(255,255,255,0.8); border-color: transparent; }
+.live-card-reward {
+  font-size: 9px;
+  color: rgba(255,255,255,0.4);
+  transition: all 0.2s;
+}
+
+/* Preview info */
+.preview-info {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.preview-info-item {
+  background: var(--surface);
+  border: 0.5px solid rgba(240,235,224,0.07);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.preview-info-label { font-size: 11px; color: var(--cream-muted); }
+.preview-info-value { font-size: 13px; font-weight: 500; color: var(--cream); }
+
+/* ══ STEP 4 : SUCCÈS ══ */
+.success-wrap {
+  text-align: center;
+  padding: 20px 0;
+}
+.success-icon {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  margin: 0 auto 24px;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+@keyframes popIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.success-title {
+  font-family: var(--font-d);
+  font-size: 40px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--gold-light);
+  margin-bottom: 12px;
+  animation: fadeUp 0.5s 0.15s ease both;
+}
+.success-desc {
+  font-size: 15px;
+  color: var(--cream-muted);
+  line-height: 1.7;
+  margin-bottom: 32px;
+  animation: fadeUp 0.5s 0.25s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Lien de partage */
+.share-box {
+  background: var(--surface);
+  border: 0.5px solid var(--gold-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.5s 0.35s ease both;
+}
+.share-box-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+  display: block;
+}
+.share-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.share-link-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 0.5px solid rgba(240,235,224,0.1);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-family: var(--font-b);
+  font-size: 12px;
+  color: var(--cream-dim);
+  outline: none;
+}
+.btn-copy {
+  background: var(--gold-dim);
+  border: 0.5px solid var(--gold-border);
+  border-radius: var(--radius-sm);
+  padding: 11px 16px;
+  font-family: var(--font-b);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gold-light);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.btn-copy:hover { background: rgba(201,168,76,0.2); }
+.btn-copy.copied { background: var(--green-dim); border-color: rgba(74,222,128,0.3); color: var(--green); }
+
+.next-steps-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+  animation: fadeUp 0.5s 0.45s ease both;
+}
+.next-step-card {
+  background: var(--surface);
+  border: 0.5px solid rgba(240,235,224,0.07);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-decoration: none;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+.next-step-card:hover { border-color: rgba(201,168,76,0.2); }
+.next-step-icon { font-size: 22px; margin-bottom: 8px; }
+.next-step-title { font-size: 13px; font-weight: 500; color: var(--cream); margin-bottom: 3px; }
+.next-step-desc  { font-size: 11px; color: var(--cream-muted); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 760px) {
+  nav { padding: 16px 20px; }
+  .progress-wrap { padding: 20px 20px 0; }
+  .onboarding-layout {
+    grid-template-columns: 1fr;
+    padding: 28px 20px 60px;
+    gap: 32px;
+  }
+  .preview-col { position: static; }
+  .phone-shell { width: 200px; }
+  .step-label { display: none; }
+  .form-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Lunéa</a>
+  <a href="#" class="nav-login">Déjà un compte ? Se connecter</a>
+</nav>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-steps" id="progress-steps">
+    <div class="progress-step active" id="pstep-1">
+      <div class="step-dot">1</div>
+      <span class="step-label">Compte</span>
+    </div>
+    <div class="progress-step" id="pstep-2">
+      <div class="step-dot">2</div>
+      <span class="step-label">Boutique</span>
+    </div>
+    <div class="progress-step" id="pstep-3">
+      <div class="step-dot">3</div>
+      <span class="step-label">Carte</span>
+    </div>
+    <div class="progress-step" id="pstep-4">
+      <div class="step-dot">✦</div>
+      <span class="step-label">Terminé</span>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="onboarding-layout">
+
+  <!-- ════ COLONNE GAUCHE : ÉTAPES ════ -->
+  <div>
+
+    <!-- ── ÉTAPE 1 : COMPTE ── -->
+    <div class="step active" id="step-1">
+      <div class="step-header">
+        <span class="step-tag">Étape 1 sur 3</span>
+        <h1 class="step-title">Créez votre<br><em>compte Lunéa</em></h1>
+        <p class="step-desc">14 jours gratuits, sans carte bancaire. Annulable à tout moment.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Votre nom complet</label>
+        <input class="form-input" type="text" id="f-name" placeholder="Marie Dupont" autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email professionnel</label>
+        <input class="form-input" type="email" id="f-email" placeholder="marie@maboulangerie.fr" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <input class="form-input" type="password" id="f-password" placeholder="8 caractères minimum" autocomplete="new-password">
+      </div>
+
+      <div class="form-error" id="err-1"></div>
+      <button class="btn-next" onclick="goStep2()">Continuer →</button>
+    </div>
+
+    <!-- ── ÉTAPE 2 : BOUTIQUE ── -->
+    <div class="step" id="step-2">
+      <div class="step-header">
+        <span class="step-tag">Étape 2 sur 3</span>
+        <h1 class="step-title">Parlez-nous de<br>votre <em>boutique</em></h1>
+        <p class="step-desc">Ces informations apparaîtront sur la carte de vos clients.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nom de l'établissement</label>
+        <input class="form-input" type="text" id="f-store" placeholder="Boulangerie Dupont" oninput="updatePreview()">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Catégorie</label>
+          <select class="form-select" id="f-category" onchange="updatePreview()">
+            <option value="">Choisir…</option>
+            <option value="boulangerie">🥐 Boulangerie</option>
+            <option value="restaurant">🍽️ Restaurant</option>
+            <option value="cafe">☕ Café</option>
+            <option value="patisserie">🍰 Pâtisserie</option>
+            <option value="epicerie">🛒 Épicerie</option>
+            <option value="autre">✦ Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ville</label>
+          <input class="form-input" type="text" id="f-city" placeholder="Paris">
+        </div>
+      </div>
+
+      <div class="form-error" id="err-2"></div>
+      <button class="btn-next" onclick="goStep3()">Continuer →</button>
+      <button class="btn-back" onclick="goBack(1)">← Retour</button>
+    </div>
+
+    <!-- ── ÉTAPE 3 : CARTE ── -->
+    <div class="step" id="step-3">
+      <div class="step-header">
+        <span class="step-tag">Étape 3 sur 3</span>
+        <h1 class="step-title">Créez votre<br><em>carte fidélité</em></h1>
+        <p class="step-desc">Personnalisez en temps réel — l'aperçu se met à jour instantanément.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nom de la carte</label>
+        <input class="form-input" type="text" id="f-card-name" placeholder="Carte Café du matin" oninput="updatePreview()">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Récompense offerte</label>
+        <input class="form-input" type="text" id="f-reward" placeholder="1 café offert" oninput="updatePreview()">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nombre de tampons avant la récompense</label>
+        <div class="stamps-control">
+          <button class="stamps-btn" onclick="changeStamps(-1)">−</button>
+          <div class="stamps-value" id="stamps-display">10</div>
+          <div class="stamps-label">tampons</div>
+          <button class="stamps-btn" onclick="changeStamps(1)">+</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Couleur de la carte</label>
+        <div class="color-grid" id="color-grid">
+          <!-- Injecté par JS -->
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Icône</label>
+        <div class="emoji-grid" id="emoji-grid">
+          <!-- Injecté par JS -->
+        </div>
+      </div>
+
+      <div class="form-error" id="err-3"></div>
+      <button class="btn-next" id="btn-create" onclick="createCard()">Créer ma carte →</button>
+      <button class="btn-back" onclick="goBack(2)">← Retour</button>
+    </div>
+
+    <!-- ── ÉTAPE 4 : SUCCÈS ── -->
+    <div class="step" id="step-4">
+      <div class="success-wrap">
+        <div class="success-icon">✦</div>
+        <div class="success-title">Votre carte est prête !</div>
+        <p class="success-desc">
+          Partagez ce lien avec vos clients — ils ajoutent la carte directement dans leur Apple Wallet ou Google Pay.
+        </p>
+
+        <div class="share-box">
+          <span class="share-box-label">Lien de votre carte</span>
+          <div class="share-link-row">
+            <input class="share-link-input" type="text" id="share-link" readonly>
+            <button class="btn-copy" id="btn-copy" onclick="copyLink()">Copier</button>
+          </div>
+        </div>
+
+        <div class="next-steps-grid">
+          <div class="next-step-card" onclick="window.location='lunea-dashboard.html'">
+            <div class="next-step-icon">📊</div>
+            <div class="next-step-title">Voir le dashboard</div>
+            <div class="next-step-desc">Stats, clients, scans</div>
+          </div>
+          <div class="next-step-card" onclick="window.location='lunea-scan.html'">
+            <div class="next-step-icon">📱</div>
+            <div class="next-step-title">Ouvrir le scanner</div>
+            <div class="next-step-desc">Prêt à scanner en caisse</div>
+          </div>
+          <div class="next-step-card">
+            <div class="next-step-icon">💬</div>
+            <div class="next-step-title">Envoyer par SMS</div>
+            <div class="next-step-desc">Partager avec vos clients</div>
+          </div>
+          <div class="next-step-card">
+            <div class="next-step-icon">🖨️</div>
+            <div class="next-step-title">Imprimer un QR</div>
+            <div class="next-step-desc">À afficher en caisse</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════ COLONNE DROITE : APERÇU ════ -->
+  <div class="preview-col">
+    <span class="preview-label">Aperçu en direct</span>
+
+    <div class="phone-shell">
+      <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+      <div class="phone-wallet-bar">
+        <span>Wallet</span>
+        <div class="wallet-dot"></div>
+      </div>
+
+      <!-- Carte vivante -->
+      <div class="live-card" id="live-card" style="background: linear-gradient(135deg, #1a2744, #0e1830);">
+        <div class="live-card-shine"></div>
+        <div class="live-card-header">
+          <div class="live-card-emoji" id="live-emoji">🎁</div>
+          <div class="live-card-name" id="live-name">Mon établissement</div>
+        </div>
+        <div class="live-card-title" id="live-title">Carte Fidélité</div>
+        <div class="live-dots" id="live-dots"></div>
+        <div class="live-card-reward" id="live-reward">Récompense après 10 tampons</div>
+      </div>
+
+      <div style="height: 12px; background: #0c0e18;"></div>
+    </div>
+
+    <div class="preview-info" id="preview-info">
+      <div class="preview-info-item">
+        <span class="preview-info-label">Tampons requis</span>
+        <span class="preview-info-value" id="prev-stamps">10</span>
+      </div>
+      <div class="preview-info-item">
+        <span class="preview-info-label">Récompense</span>
+        <span class="preview-info-value" id="prev-reward">—</span>
+      </div>
+      <div class="preview-info-item">
+        <span class="preview-info-label">Compatible</span>
+        <span class="preview-info-value">Apple & Google Wallet</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const API_URL = localStorage.getItem('lunea_api') || 'https://lunea-backend-production.up.railway.app';
+
+// ── ÉTAT ────────────────────────────────────────────────
+let state = {
+  currentStep: 1,
+  stampsRequired: 10,
+  selectedColor: '#1a2744',
+  selectedColorB: '#0e1830',
+  selectedEmoji: '🎁',
+  token: '',
+  cardId: '',
+};
+
+// ── PALETTES ────────────────────────────────────────────
+const COLORS = [
+  { a: '#1a2744', b: '#0e1830', name: 'Marine' },
+  { a: '#1f1428', b: '#160e20', name: 'Nuit' },
+  { a: '#1a3a2a', b: '#0e2016', name: 'Forêt' },
+  { a: '#3a1a10', b: '#280e08', name: 'Bordeaux' },
+  { a: '#2a1a3a', b: '#1a0e28', name: 'Aubergine' },
+  { a: '#1a2a3a', b: '#0e1a28', name: 'Ardoise' },
+  { a: '#3a2a1a', b: '#28180e', name: 'Moka' },
+  { a: '#1a3a3a', b: '#0e2424', name: 'Canard' },
+  { a: '#3a1a2a', b: '#280e1a', name: 'Framboise' },
+  { a: '#1a1a3a', b: '#0e0e28', name: 'Minuit' },
+  { a: '#2a3a1a', b: '#1a280e', name: 'Kaki' },
+  { a: '#3a3a1a', b: '#28280e', name: 'Olive' },
+];
+
+const EMOJIS = ['🥐', '☕', '🍰', '🍽️', '🥖', '🧁', '🍕', '🥗', '🍜', '🥩', '🫖', '🍷', '🎁', '✦', '🌙', '⭐'];
+
+// ── INIT ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  renderColorGrid();
+  renderEmojiGrid();
+  renderLiveDots();
+  updatePreview();
+});
+
+function renderColorGrid() {
+  const grid = document.getElementById('color-grid');
+  grid.innerHTML = COLORS.map((c, i) => `
+    <div
+      class="color-swatch ${i === 0 ? 'selected' : ''}"
+      style="background: linear-gradient(135deg, ${c.a}, ${c.b})"
+      title="${c.name}"
+      onclick="selectColor('${c.a}','${c.b}', this)"
+    ></div>
+  `).join('');
+}
+
+function renderEmojiGrid() {
+  const grid = document.getElementById('emoji-grid');
+  grid.innerHTML = EMOJIS.map((e, i) => `
+    <div
+      class="emoji-btn ${i === 12 ? 'selected' : ''}"
+      onclick="selectEmoji('${e}', this)"
+    >${e}</div>
+  `).join('');
+}
+
+function selectColor(a, b, el) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedColor  = a;
+  state.selectedColorB = b;
+  updatePreview();
+}
+
+function selectEmoji(e, el) {
+  document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedEmoji = e;
+  updatePreview();
+}
+
+function changeStamps(delta) {
+  state.stampsRequired = Math.max(3, Math.min(20, state.stampsRequired + delta));
+  document.getElementById('stamps-display').textContent = state.stampsRequired;
+  document.getElementById('prev-stamps').textContent    = state.stampsRequired;
+  renderLiveDots();
+  updatePreview();
+}
+
+function renderLiveDots() {
+  const container = document.getElementById('live-dots');
+  container.innerHTML = '';
+  const preview = Math.min(state.stampsRequired, 10);
+  for (let i = 0; i < preview; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'live-dot' + (i < Math.floor(preview * 0.6) ? ' on' : '');
+    container.appendChild(dot);
+  }
+  if (state.stampsRequired > 10) {
+    const more = document.createElement('div');
+    more.style.cssText = 'font-size:9px;color:rgba(255,255,255,0.4);align-self:center;margin-left:2px';
+    more.textContent = `+${state.stampsRequired - 10}`;
+    container.appendChild(more);
+  }
+}
+
+function updatePreview() {
+  const storeName = document.getElementById('f-store')?.value || 'Mon établissement';
+  const cardName  = document.getElementById('f-card-name')?.value || 'Carte Fidélité';
+  const reward    = document.getElementById('f-reward')?.value || '';
+
+  document.getElementById('live-card').style.background =
+    `linear-gradient(135deg, ${state.selectedColor}, ${state.selectedColorB})`;
+  document.getElementById('live-emoji').textContent  = state.selectedEmoji;
+  document.getElementById('live-name').textContent   = storeName.toUpperCase() || 'MON ÉTABLISSEMENT';
+  document.getElementById('live-title').textContent  = cardName || 'Carte Fidélité';
+  document.getElementById('live-reward').textContent = reward
+    ? `🎁 ${reward} au ${state.stampsRequired}e tampon`
+    : `Récompense après ${state.stampsRequired} tampons`;
+
+  document.getElementById('prev-reward').textContent  = reward || '—';
+  document.getElementById('prev-stamps').textContent  = state.stampsRequired;
+}
+
+// ── NAVIGATION ──────────────────────────────────────────
+function goBack(n) {
+  setStep(n);
+}
+
+function setStep(n) {
+  state.currentStep = n;
+  document.querySelectorAll('.step').forEach((s, i) => {
+    s.classList.toggle('active', i + 1 === n);
+  });
+  for (let i = 1; i <= 4; i++) {
+    const pstep = document.getElementById('pstep-' + i);
+    pstep.classList.remove('active', 'done');
+    if (i < n)      pstep.classList.add('done');
+    else if (i === n) pstep.classList.add('active');
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showErr(id, msg) {
+  const el = document.getElementById('err-' + id);
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+// ── ÉTAPE 1 → 2 ────────────────────────────────────────
+function goStep2() {
+  const name  = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const pass  = document.getElementById('f-password').value;
+
+  if (!name)              return showErr(1, 'Entrez votre nom.');
+  if (!email || !email.includes('@')) return showErr(1, 'Email invalide.');
+  if (pass.length < 8)    return showErr(1, 'Mot de passe trop court (8 car. min.)');
+
+  setStep(2);
+}
+
+// ── ÉTAPE 2 → 3 ────────────────────────────────────────
+function goStep3() {
+  const store = document.getElementById('f-store').value.trim();
+  if (!store) return showErr(2, 'Entrez le nom de votre établissement.');
+  setStep(3);
+}
+
+// ── ÉTAPE 3 : CRÉER COMPTE + CARTE ──────────────────────
+async function createCard() {
+  const cardName = document.getElementById('f-card-name').value.trim();
+  const reward   = document.getElementById('f-reward').value.trim();
+
+  if (!cardName) return showErr(3, 'Donnez un nom à votre carte.');
+  if (!reward)   return showErr(3, 'Décrivez la récompense offerte.');
+
+  const btn = document.getElementById('btn-create');
+  btn.disabled = true;
+  btn.textContent = 'Création en cours…';
+
+  try {
+    // 1. Créer le compte commerçant
+    const regRes = await apiFetch('/auth/register', 'POST', {
+      email:    document.getElementById('f-email').value.trim(),
+      password: document.getElementById('f-password').value,
+      name:     document.getElementById('f-store').value.trim(),
+      category: document.getElementById('f-category').value,
+    }, false);
+
+    state.token = regRes.token;
+    localStorage.setItem('lunea_token',    state.token);
+    localStorage.setItem('lunea_merchant', JSON.stringify(regRes.merchant));
+
+    // 2. Créer la carte
+    const cardRes = await apiFetch('/cards', 'POST', {
+      name:               cardName,
+      reward_description: reward,
+      stamps_required:    state.stampsRequired,
+      color_primary:      state.selectedColor,
+      color_secondary:    state.selectedColorB,
+      emoji:              state.selectedEmoji,
+    });
+
+    state.cardId = cardRes.id;
+
+    // 3. Générer le lien de partage
+    const shareLink = `${API_URL}/join/${state.cardId}`;
+    document.getElementById('share-link').value = shareLink;
+
+    setStep(4);
+
+  } catch (e) {
+    showErr(3, e.message || 'Erreur lors de la création. Réessaie.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Créer ma carte →';
+  }
+}
+
+// ── COPIER LE LIEN ──────────────────────────────────────
+function copyLink() {
+  const input = document.getElementById('share-link');
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✓ Copié !';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copier';
+      btn.classList.remove('copied');
+    }, 2200);
+  });
+}
+
+// ── API ──────────────────────────────────────────────────
+async function apiFetch(path, method = 'GET', body = null, withAuth = true) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (withAuth && state.token) headers['Authorization'] = `Bearer ${state.token}`;
+  const opts = { method, headers };
+  if (body) opts.body = JSON.stringify(body);
+  const res  = await fetch(API_URL + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+  return data;
+}
+</script>
+</body>
+</html>

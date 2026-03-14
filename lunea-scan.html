@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0c14">
+<title>Lunéa · Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<style>
+:root {
+  --night:      #0a0c14;
+  --deep:       #0d0f1a;
+  --surface:    #131626;
+  --surface2:   #1c2135;
+  --gold:       #c9a84c;
+  --gold-light: #e8c97a;
+  --gold-dim:   rgba(201,168,76,0.14);
+  --gold-border:rgba(201,168,76,0.25);
+  --cream:      #f0ebe0;
+  --cream-dim:  rgba(240,235,224,0.6);
+  --cream-muted:rgba(240,235,224,0.32);
+  --green:      #4ade80;
+  --green-dim:  rgba(74,222,128,0.14);
+  --red:        #f87171;
+  --font-d: 'Cormorant Garamond', serif;
+  --font-b: 'DM Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; width: 100%;
+  overflow: hidden;
+  background: var(--night);
+  color: var(--cream);
+  font-family: var(--font-b);
+  font-size: 15px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* ── SCREENS ── */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ══════════════════════════════
+   LOGIN SCREEN
+══════════════════════════════ */
+#screen-login {
+  background: var(--night);
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+}
+.login-glow {
+  position: absolute;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+  top: 10%; left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.login-logo {
+  font-family: var(--font-d);
+  font-size: 38px;
+  font-weight: 400;
+  color: var(--gold-light);
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+  position: relative;
+}
+.login-sub {
+  font-size: 12px;
+  color: var(--cream-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 48px;
+  position: relative;
+}
+.login-form {
+  width: 100%;
+  max-width: 340px;
+  position: relative;
+}
+.form-group {
+  margin-bottom: 14px;
+}
+.form-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cream-muted);
+  margin-bottom: 7px;
+}
+.form-input {
+  width: 100%;
+  background: var(--surface);
+  border: 0.5px solid rgba(240,235,224,0.12);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-family: var(--font-b);
+  font-size: 15px;
+  color: var(--cream);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.form-input::placeholder { color: var(--cream-muted); }
+.form-input:focus { border-color: var(--gold-border); }
+
+.btn-login {
+  width: 100%;
+  background: var(--gold);
+  border: none;
+  border-radius: 50px;
+  padding: 16px;
+  font-family: var(--font-b);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--night);
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s, transform 0.1s;
+  -webkit-appearance: none;
+}
+.btn-login:active { background: var(--gold-light); transform: scale(0.98); }
+
+.login-error {
+  background: rgba(248,113,113,0.12);
+  border: 0.5px solid rgba(248,113,113,0.3);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--red);
+  margin-top: 14px;
+  display: none;
+}
+.login-error.show { display: block; }
+
+.api-url-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 0.5px solid rgba(240,235,224,0.06);
+}
+.api-url-label {
+  font-size: 10px;
+  color: var(--cream-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.api-url-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 0.5px solid rgba(240,235,224,0.1);
+  padding: 4px 0;
+  font-family: var(--font-b);
+  font-size: 12px;
+  color: var(--cream-dim);
+  outline: none;
+}
+
+/* ══════════════════════════════
+   SCAN SCREEN
+══════════════════════════════ */
+#screen-scan {
+  background: #000;
+}
+
+/* Video plein écran */
+#video {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+#canvas-hidden {
+  display: none;
+}
+
+/* Overlay sombre autour de la fenêtre de scan */
+.scan-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.scan-overlay-top,
+.scan-overlay-bottom,
+.scan-overlay-left,
+.scan-overlay-right {
+  position: absolute;
+  background: rgba(10,12,20,0.6);
+}
+.scan-overlay-top    { top: 0; left: 0; right: 0; height: var(--ot, 160px); }
+.scan-overlay-bottom { bottom: 0; left: 0; right: 0; height: var(--ob, 260px); }
+.scan-overlay-left   { top: var(--ot, 160px); left: 0; width: var(--ol, 40px); bottom: var(--ob, 260px); }
+.scan-overlay-right  { top: var(--ot, 160px); right: 0; width: var(--or, 40px); bottom: var(--ob, 260px); }
+
+/* Fenêtre de scan */
+.scan-window {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -60%);
+  width: 240px; height: 240px;
+}
+.scan-corner {
+  position: absolute;
+  width: 28px; height: 28px;
+  border-color: var(--gold);
+  border-style: solid;
+  border-radius: 2px;
+}
+.scan-corner.tl { top: 0; left: 0; border-width: 3px 0 0 3px; }
+.scan-corner.tr { top: 0; right: 0; border-width: 3px 3px 0 0; }
+.scan-corner.bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
+.scan-corner.br { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
+
+.scan-line {
+  position: absolute;
+  left: 12px; right: 12px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  border-radius: 2px;
+  animation: scanMove 2s ease-in-out infinite;
+}
+@keyframes scanMove {
+  0%   { top: 16px;  opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { top: 210px; opacity: 0; }
+}
+
+/* Header overlay */
+.scan-header {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: env(safe-area-inset-top, 16px) 20px 16px;
+  padding-top: max(env(safe-area-inset-top, 16px), 16px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, rgba(10,12,20,0.9), transparent);
+  z-index: 10;
+}
+.scan-logo {
+  font-family: var(--font-d);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--gold-light);
+}
+.btn-logout {
+  background: rgba(240,235,224,0.1);
+  border: 0.5px solid rgba(240,235,224,0.15);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-family: var(--font-b);
+  font-size: 12px;
+  color: var(--cream-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-logout:active { background: rgba(240,235,224,0.18); }
+
+/* Bottom panel */
+.scan-bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 24px 24px max(env(safe-area-inset-bottom, 16px), 24px);
+  background: linear-gradient(to top, rgba(10,12,20,0.95) 60%, transparent);
+  z-index: 10;
+}
+.scan-store-name {
+  font-family: var(--font-d);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--cream);
+  margin-bottom: 4px;
+}
+.scan-hint {
+  font-size: 13px;
+  color: var(--cream-muted);
+  margin-bottom: 20px;
+}
+.scan-hint span {
+  color: var(--gold);
+}
+
+.scan-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.scan-stat {
+  background: rgba(19,22,38,0.85);
+  border: 0.5px solid rgba(240,235,224,0.08);
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-align: center;
+}
+.scan-stat-value {
+  font-family: var(--font-d);
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--gold-light);
+  line-height: 1;
+}
+.scan-stat-label {
+  font-size: 10px;
+  color: var(--cream-muted);
+  margin-top: 3px;
+  letter-spacing: 0.04em;
+}
+
+/* History mini list */
+.scan-history {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 120px;
+  overflow: hidden;
+}
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(19,22,38,0.7);
+  border: 0.5px solid rgba(240,235,224,0.06);
+  border-radius: 10px;
+  padding: 9px 12px;
+  animation: slideUp 0.3s ease both;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.history-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.history-dot.stamp  { background: var(--gold); }
+.history-dot.reward { background: var(--green); }
+.history-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.history-detail {
+  font-size: 11px;
+  color: var(--cream-muted);
+}
+.history-time {
+  font-size: 10px;
+  color: var(--cream-muted);
+  opacity: 0.7;
+}
+
+/* ══════════════════════════════
+   RESULT OVERLAYS
+══════════════════════════════ */
+.result-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  padding: 32px;
+}
+.result-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Success - tampon ajouté */
+#result-stamp {
+  background: rgba(10,12,20,0.92);
+  backdrop-filter: blur(20px);
+}
+.result-stamp-icon {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  background: var(--gold-dim);
+  border: 1.5px solid var(--gold-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 38px;
+  margin-bottom: 24px;
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+@keyframes popIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.result-client-name {
+  font-family: var(--font-d);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--cream);
+  margin-bottom: 6px;
+  text-align: center;
+}
+.result-message {
+  font-size: 14px;
+  color: var(--cream-muted);
+  text-align: center;
+  margin-bottom: 28px;
+}
+.result-stamps-row {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+.result-stamp-dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(201,168,76,0.35);
+  transition: all 0.3s;
+}
+.result-stamp-dot.filled {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.result-stamp-dot.new-filled {
+  background: var(--gold-light);
+  border-color: var(--gold-light);
+  animation: stampPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+@keyframes stampPop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+.result-card-name {
+  font-size: 12px;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+}
+.btn-result-next {
+  background: var(--gold);
+  border: none;
+  border-radius: 50px;
+  padding: 15px 48px;
+  font-family: var(--font-b);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--night);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-result-next:active { transform: scale(0.97); }
+
+/* Reward overlay */
+#result-reward {
+  background: rgba(10,12,20,0.96);
+  backdrop-filter: blur(20px);
+}
+.reward-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.burst-particle {
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: burst 1s ease-out both;
+}
+@keyframes burst {
+  from { transform: translate(0, 0) scale(1); opacity: 1; }
+  to   { opacity: 0; }
+}
+.reward-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s both;
+  position: relative;
+}
+.reward-title {
+  font-family: var(--font-d);
+  font-size: 36px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--gold-light);
+  text-align: center;
+  margin-bottom: 10px;
+  animation: fadeUp 0.4s 0.2s ease both;
+}
+.reward-desc {
+  font-size: 18px;
+  color: var(--cream);
+  text-align: center;
+  margin-bottom: 8px;
+  animation: fadeUp 0.4s 0.3s ease both;
+}
+.reward-client {
+  font-size: 13px;
+  color: var(--cream-muted);
+  text-align: center;
+  margin-bottom: 40px;
+  animation: fadeUp 0.4s 0.4s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.reward-line {
+  width: 60px; height: 0.5px;
+  background: var(--gold-border);
+  margin: 0 auto 40px;
+  animation: fadeUp 0.4s 0.35s ease both;
+}
+
+/* Error overlay */
+#result-error {
+  background: rgba(10,12,20,0.92);
+  backdrop-filter: blur(20px);
+}
+.error-icon {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: rgba(248,113,113,0.12);
+  border: 1.5px solid rgba(248,113,113,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  margin-bottom: 20px;
+  animation: popIn 0.3s ease both;
+}
+.error-title {
+  font-family: var(--font-d);
+  font-size: 24px;
+  color: var(--cream);
+  margin-bottom: 8px;
+  text-align: center;
+}
+.error-detail {
+  font-size: 13px;
+  color: var(--cream-muted);
+  text-align: center;
+  margin-bottom: 32px;
+  max-width: 260px;
+}
+.btn-result-retry {
+  background: transparent;
+  border: 0.5px solid var(--gold-border);
+  border-radius: 50px;
+  padding: 13px 40px;
+  font-family: var(--font-b);
+  font-size: 14px;
+  color: var(--gold-light);
+  cursor: pointer;
+}
+
+/* Loading spinner */
+.spinner {
+  width: 36px; height: 36px;
+  border: 2px solid rgba(201,168,76,0.15);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-size: 13px;
+  color: var(--cream-muted);
+}
+
+/* ── LOADING SCREEN ── */
+#screen-loading {
+  background: var(--night);
+  align-items: center;
+  justify-content: center;
+}
+#screen-loading .spinner { width: 28px; height: 28px; }
+</style>
+</head>
+<body>
+
+<!-- ══ SCREEN: LOADING ══ -->
+<div class="screen active" id="screen-loading">
+  <div class="spinner"></div>
+</div>
+
+<!-- ══ SCREEN: LOGIN ══ -->
+<div class="screen" id="screen-login">
+  <div class="login-glow"></div>
+  <div class="login-logo">Lunéa</div>
+  <div class="login-sub">Espace commerçant · Scanner</div>
+
+  <div class="login-form">
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" id="login-email" placeholder="vous@votreboutique.fr" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mot de passe</label>
+      <input class="form-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Se connecter</button>
+    <div class="login-error" id="login-error"></div>
+
+    <div class="api-url-row">
+      <span class="api-url-label">API</span>
+      <input class="api-url-input" type="text" id="api-url" value="http://localhost:3000">
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: SCAN ══ -->
+<div class="screen" id="screen-scan">
+  <!-- Caméra -->
+  <video id="video" playsinline autoplay muted></video>
+  <canvas id="canvas-hidden"></canvas>
+
+  <!-- Overlay de découpe -->
+  <div class="scan-overlay" id="scan-overlay">
+    <div class="scan-overlay-top"></div>
+    <div class="scan-overlay-bottom"></div>
+    <div class="scan-overlay-left"></div>
+    <div class="scan-overlay-right"></div>
+  </div>
+
+  <!-- Fenêtre de scan -->
+  <div class="scan-window" id="scan-window">
+    <div class="scan-corner tl"></div>
+    <div class="scan-corner tr"></div>
+    <div class="scan-corner bl"></div>
+    <div class="scan-corner br"></div>
+    <div class="scan-line"></div>
+  </div>
+
+  <!-- Header -->
+  <div class="scan-header">
+    <div class="scan-logo">Lunéa</div>
+    <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
+  </div>
+
+  <!-- Bottom -->
+  <div class="scan-bottom">
+    <div class="scan-store-name" id="scan-store-name">Chargement…</div>
+    <div class="scan-hint">Scannez le QR code du <span>Wallet</span> client</div>
+
+    <div class="scan-stats-row">
+      <div class="scan-stat">
+        <div class="scan-stat-value" id="stat-today">—</div>
+        <div class="scan-stat-label">Scans aujourd'hui</div>
+      </div>
+      <div class="scan-stat">
+        <div class="scan-stat-value" id="stat-rewards">—</div>
+        <div class="scan-stat-label">Récompenses</div>
+      </div>
+      <div class="scan-stat">
+        <div class="scan-stat-value" id="stat-clients">—</div>
+        <div class="scan-stat-label">Clients actifs</div>
+      </div>
+    </div>
+
+    <div class="scan-history" id="scan-history"></div>
+  </div>
+
+  <!-- ── RESULT: TAMPON AJOUTÉ ── -->
+  <div class="result-overlay" id="result-stamp">
+    <div class="result-stamp-icon">✦</div>
+    <div class="result-client-name" id="res-client-name">Jean D.</div>
+    <div class="result-card-name" id="res-card-name">Carte Café du matin</div>
+    <div class="result-stamps-row" id="res-stamps-row"></div>
+    <div class="result-message" id="res-message">Tampon ajouté !</div>
+    <button class="btn-result-next" onclick="resumeScan()">Scanner suivant →</button>
+  </div>
+
+  <!-- ── RESULT: RÉCOMPENSE ── -->
+  <div class="result-overlay" id="result-reward">
+    <div class="reward-burst" id="burst-container"></div>
+    <div class="reward-icon">🎁</div>
+    <div class="reward-title">Récompense !</div>
+    <div class="reward-desc" id="rew-desc">1 café offert</div>
+    <div class="reward-line"></div>
+    <div class="reward-client" id="rew-client">Jean Dupont</div>
+    <button class="btn-result-next" onclick="resumeScan()">Scanner suivant →</button>
+  </div>
+
+  <!-- ── RESULT: ERREUR ── -->
+  <div class="result-overlay" id="result-error">
+    <div class="error-icon">✕</div>
+    <div class="error-title">Scan invalide</div>
+    <div class="error-detail" id="err-detail">Ce QR code n'est pas reconnu.</div>
+    <button class="btn-result-retry" onclick="resumeScan()">Réessayer</button>
+  </div>
+
+  <!-- ── LOADING SCAN ── -->
+  <div class="result-overlay" id="result-loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Validation en cours…</div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+let API_URL    = localStorage.getItem('lunea_api') || 'http://localhost:3000';
+let JWT_TOKEN  = localStorage.getItem('lunea_token') || '';
+let MERCHANT   = JSON.parse(localStorage.getItem('lunea_merchant') || 'null');
+
+let scanActive  = true;
+let lastScanAt  = 0;
+let scanCooldown = 2500; // ms entre deux scans
+let statsToday   = 0;
+let statsRewards = 0;
+let animId       = null;
+
+const history = [];
+
+// ── INIT ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('api-url').value = API_URL;
+
+  // Si token stocké, vérifier et aller direct au scan
+  if (JWT_TOKEN && MERCHANT) {
+    await startScanScreen();
+  } else {
+    showScreen('login');
+  }
+});
+
+// ── NAVIGATION ──────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+// ── LOGIN ────────────────────────────────────────────────
+async function doLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const apiInput = document.getElementById('api-url').value.trim();
+  const errEl    = document.getElementById('login-error');
+
+  if (!email || !password) {
+    showError(errEl, 'Remplis tous les champs.');
+    return;
+  }
+
+  API_URL = apiInput;
+  localStorage.setItem('lunea_api', API_URL);
+
+  const btn = document.getElementById('btn-login');
+  btn.textContent = '…';
+  btn.disabled = true;
+  errEl.classList.remove('show');
+
+  try {
+    const res  = await apiFetch('/auth/login', 'POST', { email, password }, false);
+    JWT_TOKEN  = res.token;
+    MERCHANT   = res.merchant;
+    localStorage.setItem('lunea_token', JWT_TOKEN);
+    localStorage.setItem('lunea_merchant', JSON.stringify(MERCHANT));
+    await startScanScreen();
+  } catch (e) {
+    showError(errEl, e.message || 'Identifiants incorrects.');
+  } finally {
+    btn.textContent = 'Se connecter';
+    btn.disabled = false;
+  }
+}
+
+function showError(el, msg) {
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+// ── LOGOUT ──────────────────────────────────────────────
+function doLogout() {
+  stopCamera();
+  JWT_TOKEN = '';
+  MERCHANT  = null;
+  localStorage.removeItem('lunea_token');
+  localStorage.removeItem('lunea_merchant');
+  showScreen('login');
+}
+
+// ── DÉMARRER L'ÉCRAN DE SCAN ────────────────────────────
+async function startScanScreen() {
+  showScreen('scan');
+  document.getElementById('scan-store-name').textContent = MERCHANT?.name || 'Mon établissement';
+  await loadStats();
+  await startCamera();
+}
+
+// ── CAMÉRA & SCAN QR ────────────────────────────────────
+let videoStream = null;
+
+async function startCamera() {
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: 'environment', // caméra arrière sur mobile
+        width:  { ideal: 1280 },
+        height: { ideal: 720 },
+      }
+    });
+    const video = document.getElementById('video');
+    video.srcObject = videoStream;
+    video.play();
+    video.addEventListener('loadedmetadata', () => {
+      requestAnimationFrame(scanFrame);
+    });
+  } catch (e) {
+    console.error('Erreur caméra :', e);
+    showResultOverlay('error');
+    document.getElementById('err-detail').textContent =
+      'Impossible d\'accéder à la caméra. Autorise l\'accès dans les paramètres du navigateur.';
+  }
+}
+
+function stopCamera() {
+  if (videoStream) {
+    videoStream.getTracks().forEach(t => t.stop());
+    videoStream = null;
+  }
+  if (animId) cancelAnimationFrame(animId);
+}
+
+function scanFrame() {
+  if (!scanActive) { animId = requestAnimationFrame(scanFrame); return; }
+
+  const video  = document.getElementById('video');
+  const canvas = document.getElementById('canvas-hidden');
+
+  if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+    animId = requestAnimationFrame(scanFrame);
+    return;
+  }
+
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const now = Date.now();
+  if (now - lastScanAt < scanCooldown) {
+    animId = requestAnimationFrame(scanFrame);
+    return;
+  }
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = jsQR(imageData.data, imageData.width, imageData.height, {
+    inversionAttempts: 'dontInvert',
+  });
+
+  if (code) {
+    lastScanAt = now;
+    handleQRCode(code.data);
+  }
+
+  animId = requestAnimationFrame(scanFrame);
+}
+
+// ── TRAITEMENT QR ────────────────────────────────────────
+async function handleQRCode(rawData) {
+  let parsed;
+  try {
+    parsed = JSON.parse(rawData);
+  } catch {
+    // QR code non-Lunéa, ignorer silencieusement
+    return;
+  }
+
+  if (!parsed.holder_id) return;
+
+  scanActive = false;
+  showResultOverlay('loading');
+
+  try {
+    const res = await apiFetch('/scan', 'POST', { holder_id: parsed.holder_id });
+
+    // Nom du client (best-effort)
+    const clientName = parsed.client_name || 'Client';
+
+    if (res.reward_earned) {
+      showRewardResult(res, clientName);
+    } else {
+      showStampResult(res, clientName);
+    }
+
+    // Mettre à jour les stats locales
+    statsToday++;
+    if (res.reward_earned) statsRewards++;
+    updateStatsDisplay();
+    addHistoryItem(clientName, res);
+
+  } catch (e) {
+    hideAllOverlays();
+    showResultOverlay('error');
+    document.getElementById('err-detail').textContent = e.message || 'Erreur de connexion au serveur.';
+  }
+}
+
+// ── AFFICHAGE RÉSULTATS ──────────────────────────────────
+function showStampResult(res, clientName) {
+  hideAllOverlays();
+
+  document.getElementById('res-client-name').textContent = clientName;
+  document.getElementById('res-card-name').textContent   = res.card_name || '';
+  document.getElementById('res-message').textContent =
+    `${res.stamps_after} / ${res.stamps_required} tampons`;
+
+  // Dessiner les points
+  const row = document.getElementById('res-stamps-row');
+  row.innerHTML = '';
+  for (let i = 0; i < res.stamps_required; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'result-stamp-dot';
+    if (i < res.stamps_after - 1) dot.classList.add('filled');
+    if (i === res.stamps_after - 1) {
+      dot.classList.add('new-filled');
+      dot.style.animationDelay = '0.15s';
+    }
+    row.appendChild(dot);
+  }
+
+  showResultOverlay('stamp');
+}
+
+function showRewardResult(res, clientName) {
+  hideAllOverlays();
+
+  document.getElementById('rew-desc').textContent   = res.reward_description || 'Récompense obtenue';
+  document.getElementById('rew-client').textContent = clientName;
+
+  // Particles de confettis
+  const burst = document.getElementById('burst-container');
+  burst.innerHTML = '';
+  for (let i = 0; i < 24; i++) {
+    const p = document.createElement('div');
+    p.className = 'burst-particle';
+    const angle = (i / 24) * 360;
+    const dist  = 80 + Math.random() * 120;
+    const dx    = Math.cos(angle * Math.PI / 180) * dist;
+    const dy    = Math.sin(angle * Math.PI / 180) * dist - 60;
+    p.style.cssText = `
+      left: calc(50% - 3px);
+      top: 45%;
+      animation-delay: ${Math.random() * 0.15}s;
+      animation-duration: ${0.6 + Math.random() * 0.4}s;
+      background: ${i % 3 === 0 ? '#e8c97a' : i % 3 === 1 ? '#c9a84c' : '#4ade80'};
+      --tx: ${dx}px; --ty: ${dy}px;
+    `;
+    p.style.setProperty('--tx', dx + 'px');
+    p.style.setProperty('--ty', dy + 'px');
+    const anim = p.animate([
+      { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+      { transform: `translate(${dx}px, ${dy}px) scale(0)`, opacity: 0 },
+    ], { duration: 800 + Math.random() * 400, delay: Math.random() * 150, fill: 'forwards', easing: 'ease-out' });
+    burst.appendChild(p);
+  }
+
+  showResultOverlay('reward');
+}
+
+function showResultOverlay(id) {
+  const el = document.getElementById('result-' + id);
+  if (el) el.classList.add('show');
+}
+
+function hideAllOverlays() {
+  document.querySelectorAll('.result-overlay').forEach(o => o.classList.remove('show'));
+}
+
+function resumeScan() {
+  hideAllOverlays();
+  scanActive = true;
+  lastScanAt = Date.now(); // petit délai avant le prochain scan
+}
+
+// ── STATS ────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await apiFetch('/stats');
+    statsToday   = res.scans_today   || 0;
+    statsRewards = res.rewards_month || 0;
+    document.getElementById('stat-today').textContent   = statsToday;
+    document.getElementById('stat-rewards').textContent = statsRewards;
+    document.getElementById('stat-clients').textContent = res.active_clients || 0;
+  } catch { /* silencieux */ }
+}
+
+function updateStatsDisplay() {
+  document.getElementById('stat-today').textContent   = statsToday;
+  document.getElementById('stat-rewards').textContent = statsRewards;
+}
+
+// ── HISTORIQUE LOCAL ─────────────────────────────────────
+function addHistoryItem(clientName, res) {
+  history.unshift({ clientName, res, time: new Date() });
+  if (history.length > 3) history.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const el = document.getElementById('scan-history');
+  el.innerHTML = history.map(h => {
+    const mins = Math.floor((Date.now() - h.time) / 60000);
+    const timeStr = mins < 1 ? 'À l\'instant' : `il y a ${mins} min`;
+    const isReward = h.res.reward_earned;
+    const detail = isReward
+      ? h.res.reward_description
+      : `${h.res.stamps_after}/${h.res.stamps_required} tampons`;
+    return `
+      <div class="history-item">
+        <div class="history-dot ${isReward ? 'reward' : 'stamp'}"></div>
+        <div class="history-name">${h.clientName}</div>
+        <div class="history-detail">${detail}</div>
+        <div class="history-time">${timeStr}</div>
+      </div>`;
+  }).join('');
+}
+
+// ── API HELPER ───────────────────────────────────────────
+async function apiFetch(path, method = 'GET', body = null, withAuth = true) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (withAuth && JWT_TOKEN) headers['Authorization'] = `Bearer ${JWT_TOKEN}`;
+
+  const opts = { method, headers };
+  if (body) opts.body = JSON.stringify(body);
+
+  const res = await fetch(API_URL + path, opts);
+  const data = await res.json();
+
+  if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+  return data;
+}
+
+// Touches clavier (debug desktop)
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('screen-login').classList.contains('active')) {
+    doLogin();
+  }
+});
+</script>
+</body>
+</html>
